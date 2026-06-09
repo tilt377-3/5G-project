@@ -1,0 +1,30 @@
+version: '3.8'
+
+networks:
+  udp-network:
+    driver: bridge
+
+services:
+  server:
+    build: ./server
+    container_name: udp-echo-server
+    ports:
+      - "8080:8080/udp"
+    networks:
+      - udp-network
+    cpus: 0.5
+    mem_limit: 128m
+    restart: unless-stopped
+
+  client:
+    build: ./client
+    container_name: udp-echo-client
+    networks:
+      - udp-network
+    depends_on:
+      - server
+    stdin_open: true
+    tty: true
+    cpus: 0.2
+    mem_limit: 64m
+    restart: unless-stopped
