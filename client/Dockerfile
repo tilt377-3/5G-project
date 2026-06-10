@@ -3,6 +3,7 @@ FROM gcc:latest AS builder
 WORKDIR /app
 COPY client.cpp .
 
+# Теперь g++ без проблем соберет этот код статически!
 RUN g++ -static -O2 client.cpp -o client
 
 FROM alpine:latest

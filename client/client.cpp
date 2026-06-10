@@ -2,6 +2,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <netdb.h> 
 
 int main() {
     int sockfd;
@@ -14,10 +15,18 @@ int main() {
         return 1;
     }
 
+    // Резолвим ИМЕННО твое имя контейнера из docker-compose
+    struct hostent* host = gethostbyname("udp-echo-server");
+    if (host == nullptr) {
+        std::cerr << "Error: Cannot resolve hostname 'udp-echo-server'" << std::endl;
+        close(sockfd);
+        return 1;
+    }
+
     memset(&serverAddr, 0, sizeof(serverAddr));
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_port = htons(8080);
-    inet_pton(AF_INET, "udp-echo-server", &serverAddr.sin_addr);
+    memcpy(&serverAddr.sin_addr, host->h_addr, host->h_length);
 
     std::cout << "UDP Echo Client" << std::endl;
     std::cout << "Server: udp-echo-server:8080" << std::endl;
@@ -33,18 +42,21 @@ int main() {
             break;
         }
 
+        // Отправляем на сохраненный serverAddr
         sendto(sockfd, buffer, strlen(buffer), 0,
             (struct sockaddr*)&serverAddr, sizeof(serverAddr));
 
-        socklen_t addrLen = sizeof(serverAddr);
+        // Отдельная структура (как у друга), чтобы не портить адрес сервера!
+        struct sockaddr_in fromAddr;
+        socklen_t fromLen = sizeof(fromAddr);
+
         int n = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0,
-            (struct sockaddr*)&serverAddr, &addrLen);
+            (struct sockaddr*)&fromAddr, &fromLen);
 
         if (n > 0) {
             buffer[n] = '\0';
             std::cout << "Response: " << buffer << std::endl;
         }
-
         std::cout << "================================" << std::endl;
     }
 
