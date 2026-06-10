@@ -27,16 +27,29 @@ int main() {
     }
 
     std::cout << "UDP Echo Server running on port 8080" << std::endl;
+    std::cout << "Waiting for messages..." << std::endl;
 
     while (true) {
+        addrLen = sizeof(clientAddr);
         int n = recvfrom(sockfd, buffer, sizeof(buffer) - 1, 0,
             (struct sockaddr*)&clientAddr, &addrLen);
 
         if (n > 0) {
             buffer[n] = '\0';
-            std::cout << "Received: " << buffer << std::endl;
-            sendto(sockfd, buffer, n, 0,
+            std::cout << "Received: " << buffer << " from "
+                << inet_ntoa(clientAddr.sin_addr) << ":"
+                << ntohs(clientAddr.sin_port) << std::endl;
+
+            // Отправляем обратно
+            int sent = sendto(sockfd, buffer, n, 0,
                 (struct sockaddr*)&clientAddr, addrLen);
+
+            if (sent > 0) {
+                std::cout << "Sent back: " << buffer << " (" << sent << " bytes)" << std::endl;
+            }
+            else {
+                std::cout << "Failed to send back, errno: " << errno << std::endl;
+            }
         }
     }
 
