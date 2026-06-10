@@ -15,7 +15,6 @@ int main() {
         return 1;
     }
 
-    // Резолвим ИМЕННО твое имя контейнера из docker-compose
     struct hostent* host = gethostbyname("udp-echo-server");
     if (host == nullptr) {
         std::cerr << "Error: Cannot resolve hostname 'udp-echo-server'" << std::endl;
@@ -42,11 +41,9 @@ int main() {
             break;
         }
 
-        // Отправляем на сохраненный serverAddr
         sendto(sockfd, buffer, strlen(buffer), 0,
             (struct sockaddr*)&serverAddr, sizeof(serverAddr));
 
-        // Отдельная структура (как у друга), чтобы не портить адрес сервера!
         struct sockaddr_in fromAddr;
         socklen_t fromLen = sizeof(fromAddr);
 
